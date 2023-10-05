@@ -1,0 +1,88 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.ie.naukri</groupId>
+  <artifactId>ni-mentor-mentee-service</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>Archetype - ni-mentor-mentee-service</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <!-- Defined following properties with default values in order to override
+        these for Kubernetes deployment -->
+    <finalName>${project.artifactId}-${project.version}</finalName>
+    <buildDirectory>${project.basedir}/target</buildDirectory>
+    <archetype.version>1.0.0</archetype.version>
+    <mysql.spring.boot.starter>[2.0.0,3.0.0)</mysql.spring.boot.starter>
+  </properties>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.7.11</version>
+  </parent>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>com.ie.naukri.msa.concerns</groupId>
+      <artifactId>mysql-spring-boot-starter</artifactId>
+      <version>${mysql.spring.boot.starter}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.mchange</groupId>
+          <artifactId>mchange-commons-java</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.ie.naukri.search</groupId>
+      <artifactId>search-commons</artifactId>
+      <version>2.0.0-alpha20</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.json</groupId>
+      <artifactId>jakarta.json-api</artifactId>
+      <version>2.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.22</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>8</source>
+          <target>8</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>build-info</id>
+            <goals>
+              <goal>build-info</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <configuration>
+          <mainClass>com.ie.resdex.main.MainApplicationConfig</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
