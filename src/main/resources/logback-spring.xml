@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include
+            resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+    <!-- Get Application name and server port from properties file (Environment) -->
+    <springProperty scope="context" name="appName"
+                    source="spring.application.name" />
+    <springProperty scope="context" name="appPort"
+                    source="server.port" />
+    <springProperty scope="context" name="serverName"
+                    source="HOSTNAME" />
+
+    <property name="CONSOLE_LOG_PATTERN"
+              value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) [%X{systemId},%X{appId},%X{requestId}] %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}" />
+    <property name="FILE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} [%X{systemId},%X{appId},%X{requestId}] ${PID:- } --- [%t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+    <!-- ::=is used to distinguish key and value while ||| is used as token
+        separator -->
+    <property name="KAFKA_LOG_PATTERN"
+              value="logtime::=%d{yyyy-MM-dd HH:mm:ss.SSS}|||appCode::=${appName}|||server::=${serverName:-${HOSTNAME}}|||instanceIdentifier::=${instance.identifier:-${appPort}}|||level::=%p|||systemId::=%X{systemId}|||appId::=%X{appId:-0}|||transactionId::=%X{requestId}|||pid::=${PID:-}|||thread::=%t|||className::=%logger|||message::=%m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+
+    <!-- Define file names using app name and port that we have fetched from
+        properties file. File names also utilize log.path system property to work
+        out location pf log files -->
+    <property name="INFO_LOG_FILE"
+              value="${log.path:-logs}/${info.log.file:-${appName}-${appPort}-info.log}"></property>
+    <property name="ERROR_LOG_FILE"
+              value="${log.path:-logs}/${error.log.file:-${appName}-${appPort}-error.log}"></property>
+    <property name="PERFORMANCE_LOG_FILE"
+              value="${log.path:-logs}/${error.log.file:-${appName}-${appPort}-performanceMetrics.log}"></property>
+
+    <appender name="consoleAppender"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>TRACE</level>
+        </filter>
+    </appender>
+
+    <appender name="performanceMetrics"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+        <File>${PERFORMANCE_LOG_FILE}</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <FileNamePattern>${PERFORMANCE_LOG_FILE}.%d{yyyy-MM-dd}.log.gz</FileNamePattern>
+            <!-- keep 60 days' worth of history capped at 20GB total size -->
+            <maxHistory>15</maxHistory>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator> <!-- defaults to type ch.qos.logback.classic.boolex.JaninoEventEvaluator -->
+                <expression>return level &lt;= INFO;</expression>
+            </evaluator>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+    <logger name="performanceMetrics" level="INFO" additivity="false">
+        <appender-ref ref="performanceMetrics" />
+    </logger>
+
+
+    <appender name="infoAppender"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+        <File>${INFO_LOG_FILE}</File>
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <FileNamePattern>${INFO_LOG_FILE}.%d{yyyy-MM-dd}.%i</FileNamePattern>
+            <!-- keep 60 days' worth of history capped at 40GB total size -->
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator> <!-- defaults to type ch.qos.logback.classic.boolex.JaninoEventEvaluator -->
+                <expression>return level &lt;= INFO;</expression>
+            </evaluator>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <appender name="errorAppender"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+        <File>${ERROR_LOG_FILE}</File>
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <FileNamePattern>${ERROR_LOG_FILE}.%d{yyyy-MM-dd}.%i
+            </FileNamePattern>
+            <!-- keep 60 days' worth of history capped at 20GB total size -->
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <!-- This is the kafkaAppender -->
+    <appender name="kafkaAppender"
+              class="com.github.danielwegener.logback.kafka.KafkaAppender">
+        <!-- This is the default encoder that encodes every log message to an utf8-encoded
+            string -->
+        <encoder>
+            <pattern>${KAFKA_LOG_PATTERN}
+            </pattern>
+        </encoder>
+        <topic>central-services-logs</topic>
+        <keyingStrategy
+                class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
+        <deliveryStrategy
+                class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+
+        <!-- each <producerConfig> translates to regular kafka-client config (format:
+            key=value) -->
+        <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
+        <!-- bootstrap.servers is the only mandatory producerConfig -->
+        <producerConfig>bootstrap.servers=kafka.logs.resdex.com:10092,kafka2.logs.resdex.com:10092,kafka3.logs.resdex.com:10092
+        </producerConfig>
+        <!-- wait for leader broker to ack the reception of a batch. -->
+        <producerConfig>acks=1</producerConfig>
+        <!-- wait up to 1000ms and collect log messages before sending them as
+            a batch -->
+        <producerConfig>linger.ms=1000</producerConfig>
+        <producerConfig>batch.size=10</producerConfig>
+        <!-- define a client-id that you use to identify yourself against the kafka
+            broker -->
+        <producerConfig>client.id=${serverName:-${HOSTNAME}}-${CONTEXT_NAME}-logback-appender
+        </producerConfig>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+
+        <!-- this is the fallback appender if kafka is not available. -->
+        <appender-ref ref="errorAppender" />
+        <appender-ref ref="infoAppender" />
+    </appender>
+
+    <logger name="org" level="info" />
+    <logger name="org.apache.kafka" level="ERROR" />
+    <logger name="com.netflix" level="WARN" />
+    <logger name="com.ie.naukri" level="INFO" />
+
+    <root level="${log.root.level:-INFO}">
+        <if condition='property("spring.profiles.active").equalsIgnoreCase("prod") || property("centralized.logs.enabled").equalsIgnoreCase("true")'>
+            <then>
+                <if condition='isNull("kube.kafka.logging.disabled") || property("kube.kafka.logging.disabled").equalsIgnoreCase("false")'>
+                    <then>
+                        <!-- in case of physical machine -->
+                        <appender-ref ref="kafkaAppender" />
+                        <appender-ref ref="errorAppender" />
+                        <appender-ref ref="infoAppender" />
+                    </then>
+                    <else>
+                        <!-- in case of kubernetes -->
+                        <appender-ref ref="errorAppender" />
+                        <appender-ref ref="infoAppender" />
+                    </else>
+                </if>
+            </then>
+            <else>
+                <!-- in case of non-prod env. -->
+                <appender-ref ref="errorAppender" />
+                <appender-ref ref="consoleAppender" />
+                <appender-ref ref="infoAppender" />
+            </else>
+        </if>
+    </root>
+
+</configuration>

@@ -1,88 +1,227 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.ie.naukri</groupId>
-  <artifactId>ni-mentor-mentee-service</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <name>Archetype - ni-mentor-mentee-service</name>
-  <url>http://maven.apache.org</url>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.ie.naukri</groupId>
+    <artifactId>ni-mentor-mentee-service</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>Archetype - ni-mentor-mentee-service</name>
 
-  <properties>
-    <!-- Defined following properties with default values in order to override
-        these for Kubernetes deployment -->
-    <finalName>${project.artifactId}-${project.version}</finalName>
-    <buildDirectory>${project.basedir}/target</buildDirectory>
-    <archetype.version>1.0.0</archetype.version>
-    <mysql.spring.boot.starter>[2.0.0,3.0.0)</mysql.spring.boot.starter>
-  </properties>
-
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.11</version>
-  </parent>
-
-  <dependencies>
-
-    <dependency>
-      <groupId>com.ie.naukri.msa.concerns</groupId>
-      <artifactId>mysql-spring-boot-starter</artifactId>
-      <version>${mysql.spring.boot.starter}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.mchange</groupId>
-          <artifactId>mchange-commons-java</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.ie.naukri.search</groupId>
-      <artifactId>search-commons</artifactId>
-      <version>2.0.0-alpha20</version>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.json</groupId>
-      <artifactId>jakarta.json-api</artifactId>
-      <version>2.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <version>1.18.22</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-      <scope>compile</scope>
-    </dependency>
-  </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>8</source>
-          <target>8</target>
-        </configuration>
-      </plugin>
-      <plugin>
+    <parent>
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>build-info</id>
-            <goals>
-              <goal>build-info</goal>
-            </goals>
-          </execution>
-        </executions>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.11</version>
+    </parent>
 
-        <configuration>
-          <mainClass>com.ie.resdex.main.MainApplicationConfig</mainClass>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+    <properties>
+        <!-- Defined following properties with default values in order to override
+            these for Kubernetes deployment -->
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        <buildDirectory>${project.basedir}/target</buildDirectory>
+        <archetype.version>1.0.0</archetype.version>
+        <web.utils.version>[1.0.0,2.0.0)</web.utils.version>
+        <archetype.exception.version>[1.0.0,2.0.0)</archetype.exception.version>
+        <logbackkafka.version>0.2.0-RC2</logbackkafka.version>
+        <messaging.spring.boot.starter>3.4.3</messaging.spring.boot.starter>
+        <mysql.spring.boot.starter>[2.0.0,3.0.0)</mysql.spring.boot.starter>
+        <!--		<aerospike.spring.boot.starter>[3.0.0,4.0.0)</aerospike.spring.boot.starter>-->
+        <!--		<messaging.spring.boot.starter>[3.0.0,4.0.0)</messaging.spring.boot.starter>-->
+        <test.utils.version>[1.0.0,2.0.0)</test.utils.version>
+        <rest.service.client.utils.version>[1.0.0,2.0.0)</rest.service.client.utils.version>
+        <jackson.version>2.10.1</jackson.version>
+        <!--		<quartz.version>2.3.2</quartz.version>-->
+        <tomcat.version>9.0.36</tomcat.version>
+        <azure_image_tag_push>true</azure_image_tag_push>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ie.naukri.msa.concerns</groupId>
+            <artifactId>archetype-exception-framework</artifactId>
+            <version>${archetype.exception.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.json</groupId>
+            <artifactId>jakarta.json-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ie.naukri.msa.concerns</groupId>
+            <artifactId>archetype-web-utils</artifactId>
+            <version>${web.utils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>tomcat-embed-websocket</artifactId>
+                    <groupId>org.apache.tomcat.embed</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ie.naukri.msa.concerns</groupId>
+            <artifactId>mysql-spring-boot-starter</artifactId>
+            <version>${mysql.spring.boot.starter}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.mchange</groupId>
+                    <artifactId>mchange-commons-java</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <!--		<dependency>-->
+        <!--			<groupId>com.ie.naukri.msa.concerns</groupId>-->
+        <!--			<artifactId>aerospike-spring-boot-starter</artifactId>-->
+        <!--			<version>${aerospike.spring.boot.starter}</version>-->
+        <!--			<exclusions>-->
+        <!--				<exclusion>-->
+        <!--					<groupId>com.ie.naukri.msa.concerns</groupId>-->
+        <!--					<artifactId>tracing-spring-boot-starter</artifactId>-->
+        <!--				</exclusion>-->
+        <!--			</exclusions>-->
+        <!--		</dependency>-->
+        <dependency>
+            <groupId>com.ie.naukri.msa.concerns</groupId>
+            <artifactId>messaging-spring-boot-starter</artifactId>
+            <version>${messaging.spring.boot.starter}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro-ipc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.ie.naukri.msa.concerns</groupId>
+            <artifactId>test-utils</artifactId>
+            <version>${test.utils.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>c3p0</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>0.9.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.danielwegener</groupId>
+            <artifactId>logback-kafka-appender</artifactId>
+            <version>${logbackkafka.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ie.naukri.msa.concerns</groupId>
+            <artifactId>rest-service-client-utils</artifactId>
+            <version>${rest.service.client.utils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ie.naukri.search</groupId>
+            <artifactId>search-commons</artifactId>
+            <version>2.0.0-alpha20</version>
+        </dependency>
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>2.4.4</version>
+        </dependency>
+
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>2.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-to-slf4j</artifactId>
+                <version>2.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>2.4.7</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>central</id>
+            <name>libs-release</name>
+            <url>http://mavenrepo.infoedge.com/artifactory/libs-release</url>
+        </repository>
+        <repository>
+            <snapshots />
+            <id>snapshots</id>
+            <name>libs-snapshot</name>
+            <url>http://mavenrepo.infoedge.com/artifactory/libs-snapshot</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <finalName>${finalName}</finalName>
+        <directory>${buildDirectory}</directory>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build-info</id>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <mainClass>com.ie.resdex.main.MainApplicationConfig</mainClass>
+                </configuration>
+
+
+            </plugin>
+        </plugins>
+    </build>
 </project>

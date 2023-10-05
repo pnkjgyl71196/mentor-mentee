@@ -1,7 +1,5 @@
 package com.ie.naukri.search.controller;
 
-import com.ie.naukri.search.commons.dataaccess.SearchTemplate;
-import com.ie.naukri.search.commons.es.services.SearchTemplateService;
 import com.ie.naukri.search.service.IndexingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +12,6 @@ import java.io.IOException;
 @RestController
 public class IndexingController {
 
-
-
     @Autowired
     IndexingService service;
 
@@ -23,9 +19,7 @@ public class IndexingController {
     public void indexData() {
         try {
             service.indexData();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
