@@ -38,7 +38,7 @@ public class IndexingService {
 
     public void indexData() throws IOException, InterruptedException {
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; ; i++) {
             String query = "select NAME,TOTAL_EXP,ABSOLUTE_CTC,ACTIVE,MOD_DT," +
                     "t2.TITLE as PROFILE_TITLE,t2.KEYWORDS as PROFILE_KEYWORDS,EXPID, " +
                     "t1.RESID, ORGN, t1.DESIG as EXP_DESIG, t1.PROFILE as EXP_PROFILE, t1.KEYWORDS as EXP_KEYWORDS, " +
@@ -65,12 +65,14 @@ public class IndexingService {
                         // remove docs where all are longtail and longtail is new
                         List<String> prjSkillIds = Arrays.stream(prjSkillId.split(",")).collect(Collectors.toList());
                         elasticSearchDocument.setPrjSkillsId(getMasterIds(prjSkillIds));
+                        elasticSearchDocument.setPrjSkills(getMasterLabels(elasticSearchDocument.getPrjSkillsId()));
                     }
                     String expKeywordId = (String) map.get("EXP_KEYWORDS_ID");
                     if (StringUtils.hasLength(expKeywordId)) {
                         // remove docs where all are longtail and longtail is new
                         List<String> skillIds = Arrays.stream(((String) map.get("EXP_KEYWORDS_ID")).split(",")).collect(Collectors.toList());
                         elasticSearchDocument.setExpKeywordsId(getMasterIds(skillIds));
+                        elasticSearchDocument.setExpKeywords(getMasterLabels(elasticSearchDocument.getExpKeywordsId()));
                     }
 
                     if (CollectionUtils.isEmpty(elasticSearchDocument.getPrjSkillsId()) &&
@@ -113,9 +115,6 @@ public class IndexingService {
                     if (map.get("EXP_PROFILE") != null) {
                         elasticSearchDocument.setExpProfile((String) map.get("EXP_PROFILE"));
                     }
-                    if (map.get("EXP_KEYWORDS") != null) {
-                        elasticSearchDocument.setExpKeywords((String) map.get("EXP_KEYWORDS"));
-                    }
                     elasticSearchDocument.setOrgnId((String) map.get("ORGNID"));
                     elasticSearchDocument.setDesigId((String) map.get("DESIG_ID"));
                     elasticSearchDocument.setExpType((String) map.get("EXP_TYPE"));
@@ -124,9 +123,6 @@ public class IndexingService {
                     }
                     if (map.get("PRJ_TITLE") != null) {
                         elasticSearchDocument.setPrjTitle((String) map.get("PRJ_TITLE"));
-                    }
-                    if (map.get("PRJ_SKILLS") != null) {
-                        elasticSearchDocument.setPrjSkills((String) map.get("PRJ_SKILLS"));
                     }
                 } catch (Exception e) {
                     log.error("Error while processing doc: [{}]{}, message: [{}]", map, elasticSearchDocument, e.getMessage());
@@ -147,7 +143,7 @@ public class IndexingService {
             if (MASTER_ID_PATTERN.matcher(id).find()) {
                 masterIds.add(id);
             } else {
-                Long mappedId = cache.getMappedMasterId(id);
+                Long mappedId = cache.getMappedSkillMasterId(id);
                 if (mappedId != null) {
                     masterIds.add(String.valueOf(mappedId));
                 }
@@ -156,5 +152,18 @@ public class IndexingService {
         return masterIds;
     }
 
+    private String getMasterLabels(List<String> ids) {
+        StringBuilder builder = new StringBuilder();
+        for (String id : ids) {
+            String label = cache.getMasterSkillLabel(Long.valueOf(id));
+            if (label != null) {
+                if (builder.length() > 0) {
+                    builder.append(",");
+                }
+                builder.append(label);
+            }
+        }
+        return builder.toString();
+    }
 
 }
