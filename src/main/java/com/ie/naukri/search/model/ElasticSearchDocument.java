@@ -15,6 +15,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ToString
 public class ElasticSearchDocument extends IndexingDocument {
+
     @JsonProperty(value = "NAME")
     private String name;
 
@@ -89,6 +90,33 @@ public class ElasticSearchDocument extends IndexingDocument {
 
     @JsonProperty(value = "CITY")
     private String cityLabels;
+
+    @JsonProperty(value = "COURSE_ID")
+    private String courseId;
+
+    @JsonProperty(value = "COURSE_LABEL")
+    private String courseLabel;
+
+    @JsonProperty(value = "EDUCATION_TYPE")
+    private String educationType;
+
+    @JsonProperty(value = "SPEC_ID")
+    private String specId;
+
+    @JsonProperty(value = "SPEC_LABEL")
+    private String specificationLabel;
+
+    @JsonProperty(value = "COURSE_TYPE")
+    private String courseType;
+
+    @JsonProperty(value = "ENTITY_INSTITUTE_ID")
+    private String instituteId;
+
+    @JsonProperty(value = "ENTITY_INSTITUTE_LABEL")
+    private String instituteLabel;
+
+    @JsonProperty(value = "IS_PREMIUM")
+    private boolean isPremium;
 
 }
 

@@ -1,0 +1,176 @@
+{
+  "aliases":
+  {},
+  "mappings":
+  {
+    "properties":
+    {
+      "ABSOLUTE_CTC":
+      {
+        "type": "long"
+      },
+      "ACTIVE":
+      {
+        "type": "keyword"
+      },
+      "DESIG_ID":
+      {
+        "type": "keyword"
+      },
+      "EXPID":
+      {
+        "type": "keyword"
+      },
+      "EXP_DESIG":
+      {
+        "type": "text"
+      },
+      "EXP_KEYWORDS":
+      {
+        "type": "text"
+      },
+      "EXP_KEYWORDS_ID":
+      {
+        "type": "keyword"
+      },
+      "EXP_PROFILE":
+      {
+        "type": "text"
+      },
+      "EXP_TYPE":
+      {
+        "type": "keyword"
+      },
+      "MOD_DT":
+      {
+        "type": "date",
+        "store": true,
+        "format": "yyyy-MM-dd HH:mm:ss"
+      },
+      "NAME":
+      {
+        "type": "text"
+      },
+      "ORGN":
+      {
+        "type": "text"
+      },
+      "ORGNID":
+      {
+        "type": "keyword"
+      },
+      "PRJ_DETAILS":
+      {
+        "type": "text"
+      },
+      "PRJ_ROLE":
+      {
+        "type": "text"
+      },
+      "PRJ_SKILLS":
+      {
+        "type": "text"
+      },
+      "PRJ_SKILLS_ID":
+      {
+        "type": "keyword"
+      },
+      "PRJ_TITLE":
+      {
+        "type": "text"
+      },
+      "PROFILE_KEYWORDS":
+      {
+        "type": "text"
+      },
+      "PROFILE_KEYWORDS_ID":
+      {
+        "type": "keyword"
+      },
+      "PROFILE_TITLE":
+      {
+        "type": "text"
+      },
+      "RESID":
+      {
+        "type": "keyword"
+      },
+      "CITY_ID":
+      {
+        "type": "keyword"
+      },
+      "CITY":
+      {
+        "type": "text"
+      },
+      "COURSE_ID":
+      {
+        "type": "keyword"
+      },
+      "COURSE_LABEL":
+      {
+        "type": "text"
+      },
+      "EDUCATION_TYPE":
+      {
+        "type": "keyword"
+      },
+      "SPEC_ID":
+      {
+        "type": "keyword"
+      },
+      "SPEC_LABEL":
+      {
+        "type": "text"
+      },
+      "COURSE_TYPE":
+      {
+        "type": "keyword"
+      },
+      "ENTITY_INSTITUTE_ID":
+      {
+        "type": "keyword"
+      },
+      "ENTITY_INSTITUTE_LABEL":
+      {
+        "type": "text"
+      },
+      "IS_PREMIUM":
+      {
+        "type": "boolean"
+      },
+      "TOTAL_EXP":
+      {
+        "type": "float"
+      },
+      "elasticDocumentStatus":
+      {
+        "type": "keyword"
+      },
+      "id":
+      {
+        "type": "keyword"
+      }
+    }
+  },
+  "settings":
+  {
+    "index":
+    {
+      "routing":
+      {
+        "allocation":
+        {
+          "include":
+          {
+            "_tier_preference": "data_content"
+          }
+        }
+      },
+      "refresh_interval": "1s",
+      "number_of_shards": "1",
+      "max_result_window": "5000000",
+      "number_of_replicas": "0"
+    }
+  }
+}

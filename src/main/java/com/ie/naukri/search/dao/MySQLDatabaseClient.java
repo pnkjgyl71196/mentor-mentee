@@ -1,9 +1,9 @@
 package com.ie.naukri.search.dao;
 
-import com.ie.naukri.multimodule.ServiceModuleNameProvider;
 import com.ie.naukri.db.jdbc.templates.MasterSlaveAwareJdbcOperations;
 import com.ie.naukri.db.services.MasterSlaveAwareShardedJdbcService;
 import com.ie.naukri.search.DatabaseClient;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -51,6 +51,13 @@ public class MySQLDatabaseClient implements DatabaseClient {
             throw new RuntimeException("Invalid shard name");
         }
         return jdbcOperationsMap.get(shard).queryForList(query);
+    }
+
+    public List<Map<String, Object>> query(String shard, String query, MapSqlParameterSource mapSqlParameterSource) {
+        if (!jdbcOperationsMap.containsKey(shard)) {
+            throw new RuntimeException("Invalid shard name");
+        }
+        return jdbcOperationsMap.get(shard).queryForList(query, mapSqlParameterSource);
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.ie.naukri.search.dao.MySQLDatabaseClient;
 import com.ie.naukri.search.model.ElasticSearchDocument;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -221,6 +222,105 @@ public class IndexingService {
             }
         }
         return builder.toString();
+    }
+
+    public void getEducationDetails(String resId, ElasticSearchDocument elasticSearchDocument) {
+        String query = "select COURSE_ID,EDUCATION_TYPE,SPEC_ID,COURSE_TYPE,ENTITY_INSTITUTE_ID,IS_PREMIUM from cv_education where RESID=:RESID and IS_PRIMARY = 1 order by EDUCATION_TYPE desc limit 1 ";
+        MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
+        mapSqlParameterSource.addValue("RESID", resId);
+
+        List<Map<String, Object>> mapList = mySQLDatabaseClient.query("entity", query, mapSqlParameterSource);
+        if (!mapList.isEmpty()) {
+            if (mapList.get(0).get("EDUCATION_TYPE") != null) {
+                elasticSearchDocument.setEducationType((String) mapList.get(0).get("EDUCATION_TYPE"));
+            }
+            if (mapList.get(0).get("COURSE_ID") != null) {
+                elasticSearchDocument.setCourseId((String) mapList.get(0).get("COURSE_ID"));
+                elasticSearchDocument.setCourseLabel(
+                        getCourseLabel(elasticSearchDocument.getCourseId(), elasticSearchDocument.getEducationType()));
+            }
+            if (mapList.get(0).get("SPEC_ID") != null) {
+                elasticSearchDocument.setSpecId((String) mapList.get(0).get("SPEC_ID"));
+                elasticSearchDocument.setSpecificationLabel(
+                        getSpecLabel(elasticSearchDocument.getSpecId(), elasticSearchDocument.getEducationType()));
+            }
+            if (mapList.get(0).get("COURSE_TYPE") != null) {
+                elasticSearchDocument.setCourseType((String) mapList.get(0).get("COURSE_TYPE"));
+            }
+            if (mapList.get(0).get("ENTITY_INSTITUTE_ID") != null) {
+                elasticSearchDocument.setInstituteId((String) mapList.get(0).get("ENTITY_INSTITUTE_ID"));
+                elasticSearchDocument.setInstituteLabel(getInstituteLabel(elasticSearchDocument.getInstituteId()));
+            }
+            if (mapList.get(0).get("IS_PREMIUM") != null && (Integer) mapList.get(0).get("IS_PREMIUM") == 1) {
+                elasticSearchDocument.setPremium(true);
+            }
+            elasticSearchDocument.setPremium(false);
+        }
+    }
+
+    private String getInstituteLabel(String instituteId) {
+        String label = cache.getMasterInstituteLabel(Long.valueOf(instituteId));
+        if (label == null) {
+            Long mappedId = cache.getMappedInstituteMasterId(instituteId);
+            return mappedId != null ? cache.getMasterInstituteLabel(mappedId) : cache.getInstituteLabel(instituteId);
+        }
+        return label;
+    }
+
+    private String getCourseLabel(String courseId, String educationType) {
+        if (!StringUtils.hasLength(educationType)) {
+            return null;
+        }
+        String label = null;
+        switch (educationType) {
+            case "1":
+                label = cache.getMasterUGCourseLabel(Long.valueOf(courseId));
+                if (label == null) {
+                    return cache.getUGCourseLongTailLabel(courseId);
+                }
+                break;
+            case "2":
+                label = cache.getMasterPGCourseLabel(Long.valueOf(courseId));
+                if (label == null) {
+                    return cache.getPGCourseLongTailLabel(courseId);
+                }
+                break;
+            case "3":
+                label = cache.getMasterPPGCourseLabel(Long.valueOf(courseId));
+                if (label == null) {
+                    return cache.getPPGCourseLongTailLabel(courseId);
+                }
+                break;
+        }
+        return label;
+    }
+
+    private String getSpecLabel(String courseId, String educationType) {
+        if (!StringUtils.hasLength(educationType)) {
+            return null;
+        }
+        String label = null;
+        switch (educationType) {
+            case "1":
+                label = cache.getMasterUGSpecLabel(Long.valueOf(courseId));
+                if (label == null) {
+                    return cache.getUGSpecLongTailLabel(courseId);
+                }
+                break;
+            case "2":
+                label = cache.getMasterPGSpecLabel(Long.valueOf(courseId));
+                if (label == null) {
+                    return cache.getPGSpecLongTailLabel(courseId);
+                }
+                break;
+            case "3":
+                label = cache.getMasterPPGSpecLabel(Long.valueOf(courseId));
+                if (label == null) {
+                    return cache.getPPGSpecLongTailLabel(courseId);
+                }
+                break;
+        }
+        return label;
     }
 
 }
