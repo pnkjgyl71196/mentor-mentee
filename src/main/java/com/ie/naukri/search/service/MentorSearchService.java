@@ -92,6 +92,9 @@ public class MentorSearchService implements SearchService {
                         uniqueSkill.addAll(Arrays.stream(result.getExpKeywords().split(",")).collect(Collectors.toSet()));
                     }
                     result.setSkills(String.join(", ", uniqueSkill));
+                    if (!StringUtils.isEmpty(result.getTotalExp())) {
+                        result.setExp(Float.parseFloat(result.getTotalExp()));
+                    }
                     results.add(result);
                 }
             }
