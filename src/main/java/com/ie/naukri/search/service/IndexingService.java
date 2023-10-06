@@ -38,9 +38,9 @@ public class IndexingService {
 
     public void indexData() throws IOException, InterruptedException {
 
-        for (int i = 0;i<500; i++) {
+        for (int i = 0; i < 500; i++) {
             String query = "select NAME,TOTAL_EXP,ABSOLUTE_CTC,ACTIVE,MOD_DT," +
-                    "t2.TITLE as PROFILE_TITLE,t2.KEYWORDS as PROFILE_KEYWORDS,EXPID, " +
+                    "t2.TITLE as PROFILE_TITLE,t2.KEYWORDS_ID as PROFILE_KEYWORDS_ID, EXPID, " +
                     "t1.RESID, ORGN, t1.DESIG as EXP_DESIG, t1.PROFILE as EXP_PROFILE, t1.KEYWORDS as EXP_KEYWORDS, " +
                     "ORGNID, t1.KEYWORDS_ID as EXP_KEYWORDS_ID, " +
                     "DESIG_ID, EXP_TYPE, DETAILS as PRJ_DETAILS,t3.ROLE as PRJ_ROLE,t3.TITLE as PRJ_TITLE," +
@@ -64,19 +64,28 @@ public class IndexingService {
                     if (StringUtils.hasLength(prjSkillId)) {
                         // remove docs where all are longtail and longtail is new
                         List<String> prjSkillIds = Arrays.stream(prjSkillId.split(",")).collect(Collectors.toList());
-                        elasticSearchDocument.setPrjSkillsId(getMasterIds(prjSkillIds));
-                        elasticSearchDocument.setPrjSkills(getMasterLabels(elasticSearchDocument.getPrjSkillsId()));
+                        elasticSearchDocument.setPrjSkillsId(getMasterSkillIds(prjSkillIds));
+                        elasticSearchDocument.setPrjSkills(getMasterSkillLabels(elasticSearchDocument.getPrjSkillsId()));
                     }
                     String expKeywordId = (String) map.get("EXP_KEYWORDS_ID");
                     if (StringUtils.hasLength(expKeywordId)) {
                         // remove docs where all are longtail and longtail is new
                         List<String> skillIds = Arrays.stream(((String) map.get("EXP_KEYWORDS_ID")).split(",")).collect(Collectors.toList());
-                        elasticSearchDocument.setExpKeywordsId(getMasterIds(skillIds));
-                        elasticSearchDocument.setExpKeywords(getMasterLabels(elasticSearchDocument.getExpKeywordsId()));
+                        elasticSearchDocument.setExpKeywordsId(getMasterSkillIds(skillIds));
+                        elasticSearchDocument.setExpKeywords(getMasterSkillLabels(elasticSearchDocument.getExpKeywordsId()));
+                    }
+
+                    String profileKeywordsId = (String) map.get("PROFILE_KEYWORDS_ID");
+                    if (StringUtils.hasLength(profileKeywordsId)) {
+                        // remove docs where all are longtail and longtail is new
+                        List<String> profileKeywordsIds = Arrays.stream(((String) map.get("PROFILE_KEYWORDS_ID")).split(",")).collect(Collectors.toList());
+                        elasticSearchDocument.setProfileKeywordsId(getMasterSkillIds(profileKeywordsIds));
+                        elasticSearchDocument.setProfileKeywords(getMasterSkillLabels(elasticSearchDocument.getProfileKeywordsId()));
                     }
 
                     if (CollectionUtils.isEmpty(elasticSearchDocument.getPrjSkillsId()) &&
-                            CollectionUtils.isEmpty(elasticSearchDocument.getExpKeywordsId())) {
+                            CollectionUtils.isEmpty(elasticSearchDocument.getExpKeywordsId()) &&
+                            CollectionUtils.isEmpty(elasticSearchDocument.getProfileKeywordsId())) {
                         log.info("Excluding {} ", elasticSearchDocument.getExpId().toString());
                         continue;
                     }
@@ -103,9 +112,6 @@ public class IndexingService {
                     if (map.get("PRJ_DETAILS") != null && (prjDetails = (byte[]) map.get("PRJ_DETAILS")) != null && prjDetails.length > 0) {
                         elasticSearchDocument.setPrjDetails(new String(prjDetails));
                     }
-                    if (map.get("PROFILE_KEYWORDS") != null) {
-                        elasticSearchDocument.setProfileKeywords((String) map.get("PROFILE_KEYWORDS"));
-                    }
                     if (map.get("ORGN") != null) {
                         elasticSearchDocument.setOrgn((String) map.get("ORGN"));
                     }
@@ -116,7 +122,9 @@ public class IndexingService {
                         elasticSearchDocument.setExpProfile((String) map.get("EXP_PROFILE"));
                     }
                     elasticSearchDocument.setOrgnId((String) map.get("ORGNID"));
-                    elasticSearchDocument.setDesigId((String) map.get("DESIG_ID"));
+                    if (map.get("DESIG_ID") != null) {
+                        elasticSearchDocument.setDesigId(getMasterDesignationId((String) map.get("DESIG_ID")));
+                    }
                     elasticSearchDocument.setExpType((String) map.get("EXP_TYPE"));
                     if (map.get("PRJ_ROLE") != null) {
                         elasticSearchDocument.setPrjRole((String) map.get("PRJ_ROLE"));
@@ -137,7 +145,7 @@ public class IndexingService {
 
     }
 
-    private List<String> getMasterIds(List<String> ids) {
+    private List<String> getMasterSkillIds(List<String> ids) {
         final List<String> masterIds = new ArrayList<>(ids.size());
         for (String id : ids) {
             if (MASTER_ID_PATTERN.matcher(id).find()) {
@@ -152,7 +160,16 @@ public class IndexingService {
         return masterIds;
     }
 
-    private String getMasterLabels(List<String> ids) {
+    private String getMasterDesignationId(String id) {
+        if (MASTER_ID_PATTERN.matcher(id).find()) {
+            return id;
+        } else {
+            Long mappedId = cache.getMappedDesignationMasterId(id);
+            return mappedId != null ? String.valueOf(mappedId) : id;
+        }
+    }
+
+    private String getMasterSkillLabels(List<String> ids) {
         StringBuilder builder = new StringBuilder();
         for (String id : ids) {
             String label = cache.getMasterSkillLabel(Long.valueOf(id));
@@ -164,6 +181,10 @@ public class IndexingService {
             }
         }
         return builder.toString();
+    }
+
+    private String getMasterDesignationLabel(String id) {
+        return cache.getMasterDesignationLabel(Long.valueOf(id));
     }
 
 }

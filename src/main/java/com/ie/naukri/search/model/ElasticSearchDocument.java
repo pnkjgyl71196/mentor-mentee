@@ -33,6 +33,9 @@ public class ElasticSearchDocument extends IndexingDocument {
     @JsonProperty(value = "PROFILE_TITLE")
     private String profileTitle;
 
+    @JsonProperty(value = "PROFILE_KEYWORDS_ID")
+    private List<String> profileKeywordsId;
+
     @JsonProperty(value = "PROFILE_KEYWORDS")
     private String profileKeywords;
 

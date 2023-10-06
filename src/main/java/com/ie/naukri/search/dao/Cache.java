@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ie.naukri.search.model.EntityDTO;
 import com.ie.naukri.search.service.RestClient;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -48,7 +47,8 @@ public class Cache {
     public void init() throws Exception {
         prepareMasterSkillsMap();
         prepareMasterDesignationMap();
-        populateSkillLongtail();
+        populateSkillLongTail();
+        populateDesignationLongTail();
     }
 
     public void prepareMasterSkillsMap() throws Exception {
@@ -87,15 +87,26 @@ public class Cache {
         return masterDesignationsMap.get(id);
     }
 
-    private void populateSkillLongtail() {
+    private void populateSkillLongTail() {
         List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select variant_id,global_id from skill_longtail where global_id is not null");
         for (Map<String, Object> map : result) {
             if (map.get("variant_id") != null && map.get("global_id") != null) {
                 String variantId = ((String) map.get("variant_id")).trim();
-                if (variantId.length() != 0) {
-                    longTailToMasterSkillsMap.put((String) map.get("variant_id"), Long.valueOf((Integer)map.get("global_id")));
+                if (!variantId.isEmpty()) {
+                    longTailToMasterSkillsMap.put((String) map.get("variant_id"), Long.valueOf((Integer) map.get("global_id")));
                 }
+            }
+        }
+    }
 
+    private void populateDesignationLongTail() {
+        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select variant_id,global_id from designation_longtail where global_id is not null");
+        for (Map<String, Object> map : result) {
+            if (map.get("variant_id") != null && map.get("global_id") != null) {
+                String variantId = ((String) map.get("variant_id")).trim();
+                if (!variantId.isEmpty()) {
+                    longTailToMasterDesignationsMap.put((String) map.get("variant_id"), Long.valueOf((Integer) map.get("global_id")));
+                }
             }
         }
     }
@@ -133,26 +144,26 @@ public class Cache {
         if (longTailToMasterDesignationsMap.containsKey(trimmedId)) {
             return longTailToMasterDesignationsMap.get(trimmedId);
         }
-        try {
-            String response = restClient.execute(
-                    entityLongTailSkillDesignationUrl + "/desig/" + trimmedId, HttpMethod.GET, null,
-                    String.class);
-            if (!response.isEmpty()) {
-                JSONObject jsonObject = new JSONObject(response);
-                if (jsonObject.has("skillLongtail") && !jsonObject.isNull("skillLongtail")) {
-                    JSONObject skillLongTail = jsonObject.getJSONObject("skillLongtail");
-                    longTailToMasterDesignationsMap.put(trimmedId, null);
-                    if (skillLongTail.has("status") && !skillLongTail.isNull("status")
-                            && "MERGED".equals(skillLongTail.getString("status")) && !skillLongTail.isNull("labelTypeGlobalId")) {
-                        Long mappedId = skillLongTail.getLong("labelTypeGlobalId");
-                        longTailToMasterDesignationsMap.put(trimmedId, mappedId);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error("exception in getting masterId for longTail Designation Id [{}]: ", trimmedId, e);
-        }
-        return longTailToMasterDesignationsMap.get(trimmedId);
+        return null;
+//        try {
+//            String response = restClient.execute(
+//                    entityLongTailSkillDesignationUrl + "/desig/" + trimmedId, HttpMethod.GET, null,
+//                    String.class);
+//            if (!response.isEmpty()) {
+//                JSONObject jsonObject = new JSONObject(response);
+//                if (jsonObject.has("skillLongtail") && !jsonObject.isNull("skillLongtail")) {
+//                    JSONObject skillLongTail = jsonObject.getJSONObject("skillLongtail");
+//                    longTailToMasterDesignationsMap.put(trimmedId, null);
+//                    if (skillLongTail.has("status") && !skillLongTail.isNull("status")
+//                            && "MERGED".equals(skillLongTail.getString("status")) && !skillLongTail.isNull("labelTypeGlobalId")) {
+//                        Long mappedId = skillLongTail.getLong("labelTypeGlobalId");
+//                        longTailToMasterDesignationsMap.put(trimmedId, mappedId);
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            log.error("exception in getting masterId for longTail Designation Id [{}]: ", trimmedId, e);
+//        }
     }
 
 }
