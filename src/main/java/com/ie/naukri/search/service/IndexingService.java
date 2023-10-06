@@ -39,7 +39,7 @@ public class IndexingService {
     public void indexData() throws IOException, InterruptedException {
 
         for (int i = 0; i < 500; i++) {
-            String query = "select NAME,TOTAL_EXP,ABSOLUTE_CTC,ACTIVE,MOD_DT," +
+            String query = "select NAME,TOTAL_EXP,ABSOLUTE_CTC,ACTIVE,MOD_DT,CITY," +
                     "t2.TITLE as PROFILE_TITLE,t2.KEYWORDS_ID as PROFILE_KEYWORDS_ID, EXPID, " +
                     "t1.RESID, ORGN, t1.DESIG as EXP_DESIG, t1.PROFILE as EXP_PROFILE, t1.KEYWORDS as EXP_KEYWORDS, " +
                     "ORGNID, t1.KEYWORDS_ID as EXP_KEYWORDS_ID, " +
@@ -134,6 +134,11 @@ public class IndexingService {
                     if (map.get("PRJ_TITLE") != null) {
                         elasticSearchDocument.setPrjTitle((String) map.get("PRJ_TITLE"));
                     }
+                    if (map.get("CITY") != null) {
+                        List<String> cityIds = Arrays.stream(((String) map.get("CITY")).split(",")).collect(Collectors.toList());
+                        elasticSearchDocument.setCityIds(getMasterCityIds(cityIds));
+                        elasticSearchDocument.setCityLabels(getMasterCityLabel(elasticSearchDocument.getCityIds()));
+                    }
                 } catch (Exception e) {
                     log.error("Error while processing doc: [{}]{}", map, elasticSearchDocument, e);
                 }
@@ -171,6 +176,21 @@ public class IndexingService {
         }
     }
 
+    private List<String> getMasterCityIds(List<String> cityIds) {
+        final List<String> masterIds = new ArrayList<>();
+        for (String id : cityIds) {
+            if (cache.existInMasterCity(Long.valueOf(id))) {
+                masterIds.add(id);
+            } else {
+                Long mappedId = cache.getMappedCityMasterId(id.trim());
+                if (mappedId != null) {
+                    masterIds.add(String.valueOf(mappedId));
+                }
+            }
+        }
+        return masterIds;
+    }
+
     private String getMasterSkillLabels(List<String> ids) {
         StringBuilder builder = new StringBuilder();
         for (String id : ids) {
@@ -187,6 +207,20 @@ public class IndexingService {
 
     private String getMasterDesignationLabel(String id) {
         return cache.getMasterDesignationLabel(Long.valueOf(id));
+    }
+
+    private String getMasterCityLabel(List<String> ids) {
+        StringBuilder builder = new StringBuilder();
+        for (String id : ids) {
+            String label = cache.getMasterCityLabel(Long.valueOf(id));
+            if (label != null) {
+                if (builder.length() > 0) {
+                    builder.append(",");
+                }
+                builder.append(label);
+            }
+        }
+        return builder.toString();
     }
 
 }

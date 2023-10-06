@@ -34,21 +34,34 @@ public class Cache {
     @Value("${entityLongTailSkillDesignationUrl}")
     private String entityLongTailSkillDesignationUrl;
 
+    @Value("${masterCityIdLabelURL}")
+    private String masterCityIdLabelURL;
+
+    @Value("${longTailCityIdLabelURL}")
+    private String longTailCityIdLabelURL;
+
     @Autowired
     private RestClient restClient;
 
     private static final Map<Long, String> masterSkillsMap = new HashMap<>();
     private static final Map<Long, String> masterDesignationsMap = new HashMap<>();
+    private static final Map<Long, String> masterCitiesMap = new HashMap<>();
 
     private static final Map<String, Long> longTailToMasterSkillsMap = new HashMap<>();
     private static final Map<String, Long> longTailToMasterDesignationsMap = new HashMap<>();
+    private static final Map<String, Long> longTailToMasterCityMap = new HashMap<>();
 
     @PostConstruct
     public void init() throws Exception {
+
         prepareMasterSkillsMap();
         prepareMasterDesignationMap();
+        prepareMasterCityMap();
+
         populateSkillLongTail();
         populateDesignationLongTail();
+        populateCityLongTail();
+
     }
 
     public void prepareMasterSkillsMap() throws Exception {
@@ -79,12 +92,31 @@ public class Cache {
         }
     }
 
+    public void prepareMasterCityMap() throws Exception {
+        String cityIdLabel = restClient.execute(masterCityIdLabelURL, HttpMethod.GET, null,
+                String.class);
+        TypeReference<List<EntityDTO>> typeReference = new TypeReference<List<EntityDTO>>() {
+        };
+        List<EntityDTO> groups = objectMapper.readValue(cityIdLabel, typeReference);
+        for (EntityDTO entity : groups) {
+            masterCitiesMap.put(entity.getId(), entity.getLabel());
+        }
+    }
+
     public String getMasterSkillLabel(Long id) {
         return masterSkillsMap.get(id);
     }
 
     public String getMasterDesignationLabel(Long id) {
         return masterDesignationsMap.get(id);
+    }
+
+    public String getMasterCityLabel(Long id) {
+        return masterCitiesMap.get(id);
+    }
+
+    public boolean existInMasterCity(Long id) {
+        return masterCitiesMap.containsKey(id);
     }
 
     private void populateSkillLongTail() {
@@ -110,6 +142,19 @@ public class Cache {
             }
         }
     }
+
+    private void populateCityLongTail() {
+        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select variant_id,global_id from city_longtail where global_id is not null");
+        for (Map<String, Object> map : result) {
+            if (map.get("variant_id") != null && map.get("global_id") != null) {
+                String variantId = ((String) map.get("variant_id")).trim();
+                if (!variantId.isEmpty()) {
+                    longTailToMasterCityMap.put((String) map.get("variant_id"), Long.valueOf((Integer) map.get("global_id")));
+                }
+            }
+        }
+    }
+
 
     public Long getMappedSkillMasterId(String id) {
         String trimmedId = id.trim();
@@ -166,4 +211,30 @@ public class Cache {
 //        }
     }
 
+    public Long getMappedCityMasterId(String id) {
+        String trimmedId = id.trim();
+        if (longTailToMasterDesignationsMap.containsKey(trimmedId)) {
+            return longTailToMasterDesignationsMap.get(trimmedId);
+        }
+        return null;
+//        try {
+//            String response = restClient.execute(
+//                    entityLongTailSkillDesignationUrl + "/desig/" + trimmedId, HttpMethod.GET, null,
+//                    String.class);
+//            if (!response.isEmpty()) {
+//                JSONObject jsonObject = new JSONObject(response);
+//                if (jsonObject.has("skillLongtail") && !jsonObject.isNull("skillLongtail")) {
+//                    JSONObject skillLongTail = jsonObject.getJSONObject("skillLongtail");
+//                    longTailToMasterDesignationsMap.put(trimmedId, null);
+//                    if (skillLongTail.has("status") && !skillLongTail.isNull("status")
+//                            && "MERGED".equals(skillLongTail.getString("status")) && !skillLongTail.isNull("labelTypeGlobalId")) {
+//                        Long mappedId = skillLongTail.getLong("labelTypeGlobalId");
+//                        longTailToMasterDesignationsMap.put(trimmedId, mappedId);
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            log.error("exception in getting masterId for longTail Designation Id [{}]: ", trimmedId, e);
+//        }
+    }
 }

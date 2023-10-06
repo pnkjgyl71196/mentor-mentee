@@ -81,9 +81,14 @@ public class ElasticSearchDocument extends IndexingDocument {
     @JsonProperty(value = "PRJ_SKILLS_ID")
     private List<String> prjSkillsId;
 
-
     @JsonProperty(value = "RESID")
     private Integer resId;
+
+    @JsonProperty(value = "CITY_ID")
+    private List<String> cityIds;
+
+    @JsonProperty(value = "CITY")
+    private String cityLabels;
 
 }
 
