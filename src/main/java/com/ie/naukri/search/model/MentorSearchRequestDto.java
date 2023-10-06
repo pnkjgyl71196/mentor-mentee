@@ -6,10 +6,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ie.naukri.search.commons.core.dtos.SearchRequestDTO;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ToString
 public class MentorSearchRequestDto implements SearchRequestDTO {
 
     @JsonProperty(value = "totalExp")

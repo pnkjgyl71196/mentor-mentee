@@ -42,6 +42,7 @@ public class MentorSearchService implements SearchService {
     @Override
     public <TDocument> SearchResponseDTO search(SearchRequestDTO searchRequestDTO, Class<TDocument> tDocumentClass) throws IOException {
         MentorSearchResponseDto searchResponseDto = new MentorSearchResponseDto();
+        log.info("SEarch Request Dto:[{}]", searchRequestDTO);
         SearchTemplate searchTemplate = moduleAwareSearchClient.getTemplate("demo1");
         MentorSearchRequestModel searchRequestModel = new ObjectMapper().convertValue(searchRequestDTO, MentorSearchRequestModel.class);
         BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder();
@@ -90,6 +91,11 @@ public class MentorSearchService implements SearchService {
                     }
                     if (!StringUtils.isEmpty(result.getExpKeywords())) {
                         uniqueSkill.addAll(Arrays.stream(result.getExpKeywords().split(",")).collect(Collectors.toSet()));
+                    }
+                    if (uniqueSkill.contains(searchRequestModel.getSkill())) {
+                       uniqueSkill.remove(searchRequestModel.getSkill());
+                       String str = "<strong>" + searchRequestModel.getSkill() + "</strong>";
+                       uniqueSkill.add(str);
                     }
                     result.setSkills(String.join(", ", uniqueSkill));
                     if (!StringUtils.isEmpty(result.getTotalExp())) {
