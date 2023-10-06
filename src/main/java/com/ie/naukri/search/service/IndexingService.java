@@ -94,6 +94,10 @@ public class IndexingService {
                         String[] str = totalExp.split("\\.");
                         if (str.length == 2 && (str[1].equals("-1") || str[1].isEmpty())) {
                             totalExp = str[0];
+                            if ("99".equals(totalExp)) {
+                                log.info("Excluding {} due to experience", elasticSearchDocument.getExpId().toString());
+                                continue;
+                            }
                         }
                     }
                     elasticSearchDocument.setTotalExp(totalExp);
@@ -270,7 +274,7 @@ public class IndexingService {
     }
 
     private String getCourseLabel(Integer courseId, Integer educationType) {
-        if (educationType==null) {
+        if (educationType == null) {
             return null;
         }
         String label = null;
@@ -298,7 +302,7 @@ public class IndexingService {
     }
 
     private String getSpecLabel(String courseId, Integer educationType) {
-        if (educationType==null) {
+        if (educationType == null) {
             return null;
         }
         String label = null;
