@@ -133,7 +133,7 @@ public class IndexingService {
                         elasticSearchDocument.setPrjTitle((String) map.get("PRJ_TITLE"));
                     }
                 } catch (Exception e) {
-                    log.error("Error while processing doc: [{}]{}, message: [{}]", map, elasticSearchDocument, e.getMessage());
+                    log.error("Error while processing doc: [{}]{}", map, elasticSearchDocument, e);
                 }
                 docList.add(elasticSearchDocument);
             }
