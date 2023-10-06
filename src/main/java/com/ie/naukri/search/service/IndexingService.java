@@ -102,9 +102,11 @@ public class IndexingService {
                     elasticSearchDocument.setResId((Integer) map.get("RESID"));
                     elasticSearchDocument.setAbsoluteCtc((Integer) map.get("ABSOLUTE_CTC"));
                     elasticSearchDocument.setActive((String) map.get("ACTIVE"));
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    String formattedDateTime = dateFormat.format(((Timestamp) map.get("MOD_DT")).getTime());
-                    elasticSearchDocument.setModDt(formattedDateTime);
+                    if (map.get("MOD_DT") != null) {
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        String formattedDateTime = dateFormat.format(((Timestamp) map.get("MOD_DT")).getTime());
+                        elasticSearchDocument.setModDt(formattedDateTime);
+                    }
                     if (map.get("PROFILE_TITLE") != null) {
                         elasticSearchDocument.setProfileTitle((String) map.get("PROFILE_TITLE"));
                     }
