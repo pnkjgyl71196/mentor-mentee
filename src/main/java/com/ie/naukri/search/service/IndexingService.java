@@ -46,7 +46,8 @@ public class IndexingService {
                     "from cv_exp t1 inner join cv_profile t2 on t1.RESID = t2.RESID " +
                     "left join cv_itprojects t3 on t1.RESID = t3.RESID " +
                     "where t2.ACTIVE = 'y' AND ( LENGTH(t1.KEYWORDS) > 0 or t3.RESID is not NULL ) AND MOD_DT is not null " +
-                    "AND TOTAL_EXP > 1 AND EXP_TYPE ='F'";
+                    "AND TOTAL_EXP > 1 AND EXP_TYPE ='F' AND " +
+                    "(ORGNID IS NOT NULL OR ORGNID != '0')  AND (DESIG_ID is not NULL OR DESIG_ID != '0')";
             query = query + " limit " + i * 100 + ",100";
             List<Map<String, Object>> result = mySQLDatabaseClient.query("demo", query);
             List<ElasticSearchDocument> docList = new ArrayList<>();
@@ -100,6 +101,7 @@ public class IndexingService {
                             }
                         }
                     }
+                    elasticSearchDocument.setOrgnId((String) map.get("ORGNID"));
                     elasticSearchDocument.setTotalExp(totalExp);
                     elasticSearchDocument.setResId((Integer) map.get("RESID"));
                     elasticSearchDocument.setAbsoluteCtc((Integer) map.get("ABSOLUTE_CTC"));
@@ -125,7 +127,6 @@ public class IndexingService {
                     if (map.get("EXP_PROFILE") != null) {
                         elasticSearchDocument.setExpProfile((String) map.get("EXP_PROFILE"));
                     }
-                    elasticSearchDocument.setOrgnId((String) map.get("ORGNID"));
                     if (map.get("DESIG_ID") != null) {
                         elasticSearchDocument.setDesigId(getMasterDesignationId((String) map.get("DESIG_ID")));
                     }
