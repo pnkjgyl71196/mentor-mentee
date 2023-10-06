@@ -54,9 +54,9 @@ public class Cache {
     private static final Map<Long, String> masterUGCourseMap = new HashMap<>();
     private static final Map<Long, String> masterPGCourseMap = new HashMap<>();
     private static final Map<Long, String> masterPPGCourseMap = new HashMap<>();
-    private static final Map<Long, String> masterUGSpecMap = new HashMap<>();
-    private static final Map<Long, String> masterPGSpecMap = new HashMap<>();
-    private static final Map<Long, String> masterPPGSpecMap = new HashMap<>();
+    private static final Map<String, String> masterUGSpecMap = new HashMap<>();
+    private static final Map<String, String> masterPGSpecMap = new HashMap<>();
+    private static final Map<String, String> masterPPGSpecMap = new HashMap<>();
 
     private static final Map<String, Long> longTailToMasterSkillsMap = new HashMap<>();
     private static final Map<String, Long> longTailToMasterDesignationsMap = new HashMap<>();
@@ -149,9 +149,9 @@ public class Cache {
     }
 
     public void prepareMasterUGSpecMap() {
-        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select global_id,name from ugspec_master");
+        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select course_id,spec_id,name from ugspec_master");
         for (Map<String, Object> map : result) {
-            masterUGSpecMap.put(Long.valueOf((Integer) map.get("global_id")), (String) map.get("name"));
+            masterUGSpecMap.put(String.valueOf((Integer) map.get("course_id")) + "-" + String.valueOf((Integer) map.get("spec_id")), (String) map.get("name"));
         }
     }
 
@@ -163,9 +163,9 @@ public class Cache {
     }
 
     public void prepareMasterPGSpecMap() {
-        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select global_id,name from pgspec_master");
+        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select course_id, spec_id,name from pgspec_master");
         for (Map<String, Object> map : result) {
-            masterPGSpecMap.put(Long.valueOf((Integer) map.get("global_id")), (String) map.get("name"));
+            masterPGSpecMap.put(String.valueOf((Integer) map.get("course_id")) + "-" + String.valueOf((Integer) map.get("spec_id")), (String) map.get("name"));
         }
     }
 
@@ -177,9 +177,9 @@ public class Cache {
     }
 
     public void prepareMasterPPGSpecMap() {
-        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select global_id,name from ppgspec_master");
+        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select course_id, spec_id,name from ppgspec_master");
         for (Map<String, Object> map : result) {
-            masterPPGSpecMap.put(Long.valueOf((Integer) map.get("global_id")), (String) map.get("name"));
+            masterPPGSpecMap.put(String.valueOf((Integer) map.get("course_id")) + "-" + String.valueOf((Integer) map.get("spec_id")), (String) map.get("name"));
         }
     }
 
@@ -207,24 +207,24 @@ public class Cache {
         return masterUGCourseMap.get(id);
     }
 
-    public String getMasterUGSpecLabel(Long id) {
-        return masterUGSpecMap.get(id);
+    public String getMasterUGSpecLabel(String courseId, String specId) {
+        return masterUGSpecMap.get(courseId+"-"+specId);
     }
 
     public String getMasterPGCourseLabel(Long id) {
         return masterPGCourseMap.get(id);
     }
 
-    public String getMasterPGSpecLabel(Long id) {
-        return masterPGSpecMap.get(id);
+    public String getMasterPGSpecLabel(String courseId, String specId) {
+        return masterPGSpecMap.get(courseId+"-"+specId);
     }
 
     public String getMasterPPGCourseLabel(Long id) {
         return masterPPGCourseMap.get(id);
     }
 
-    public String getMasterPPGSpecLabel(Long id) {
-        return masterPPGSpecMap.get(id);
+    public String getMasterPPGSpecLabel(String courseId, String specId) {
+        return masterPPGSpecMap.get(courseId+"-"+specId);
     }
 
     private void populateSkillLongTail() {
@@ -339,13 +339,14 @@ public class Cache {
         return null;
     }
 
-    public String getUGSpecLongTailLabel(String variantId) {
+    public String getUGSpecLongTailLabel(String courseId, String variantId) {
         if (longTailUGSpecLabelMap.containsKey(variantId)) {
             return longTailUGSpecLabelMap.get(variantId);
         }
-        String query = "select variant_name from ugspec_longtail where variant_id=:variant_id";
+        String query = "select variant_name from ugspec_longtail where course_id=:course_id and variant_id=:variant_id";
         MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         mapSqlParameterSource.addValue("variant_id", variantId);
+        mapSqlParameterSource.addValue("course_id", courseId);
         List<Map<String, Object>> mapList = mySQLDatabaseClient.query("entity", query, mapSqlParameterSource);
         longTailUGSpecLabelMap.put(variantId, null);
         if (!mapList.isEmpty()) {
@@ -371,13 +372,14 @@ public class Cache {
         return null;
     }
 
-    public String getPGSpecLongTailLabel(String variantId) {
+    public String getPGSpecLongTailLabel(String courseId,String variantId) {
         if (longTailPGSpecLabelMap.containsKey(variantId)) {
             return longTailPGSpecLabelMap.get(variantId);
         }
-        String query = "select variant_name from pgspec_longtail where variant_id=:variant_id";
+        String query = "select variant_name from pgspec_longtail where course_id=:course_id and variant_id=:variant_id";
         MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         mapSqlParameterSource.addValue("variant_id", variantId);
+        mapSqlParameterSource.addValue("course_id", courseId);
         List<Map<String, Object>> mapList = mySQLDatabaseClient.query("entity", query, mapSqlParameterSource);
         longTailPGSpecLabelMap.put(variantId, null);
         if (!mapList.isEmpty()) {
@@ -403,13 +405,14 @@ public class Cache {
         return null;
     }
 
-    public String getPPGSpecLongTailLabel(String variantId) {
+    public String getPPGSpecLongTailLabel(String courseId, String variantId) {
         if (longTailPPGSpecLabelMap.containsKey(variantId)) {
             return longTailPPGSpecLabelMap.get(variantId);
         }
-        String query = "select variant_name from ppgspec_longtail where variant_id=:variant_id";
+        String query = "select variant_name from ppgspec_longtail where course_id=:course_id and variant_id=:variant_id";
         MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         mapSqlParameterSource.addValue("variant_id", variantId);
+        mapSqlParameterSource.addValue("course_id", courseId);
         List<Map<String, Object>> mapList = mySQLDatabaseClient.query("entity", query, mapSqlParameterSource);
         longTailPPGSpecLabelMap.put(variantId, null);
         if (!mapList.isEmpty()) {

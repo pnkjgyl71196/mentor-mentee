@@ -13,7 +13,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -238,15 +238,27 @@ public class IndexingService {
             if (mapList.get(0).get("EDUCATION_TYPE") != null) {
                 elasticSearchDocument.setEducationType((Integer) mapList.get(0).get("EDUCATION_TYPE"));
             }
+            Integer courseId = 0;
+            Integer cId = 0;
+            Integer specId = 0;
+            Integer sId = 0;
             if (mapList.get(0).get("COURSE_ID") != null) {
-                elasticSearchDocument.setCourseId((Integer) mapList.get(0).get("COURSE_ID"));
+                courseId = (Integer) mapList.get(0).get("COURSE_ID");
+                cId = getGlobalCourseId(courseId, elasticSearchDocument.getEducationType());
+                elasticSearchDocument.setCourseId(cId);
                 elasticSearchDocument.setCourseLabel(
-                        getCourseLabel(elasticSearchDocument.getCourseId(), elasticSearchDocument.getEducationType()));
+                        getCourseLabel(courseId, elasticSearchDocument.getEducationType()));
             }
             if (mapList.get(0).get("SPEC_ID") != null) {
-                elasticSearchDocument.setSpecId((Integer) mapList.get(0).get("SPEC_ID"));
+                specId = (Integer) mapList.get(0).get("SPEC_ID");
+               if (cId < 9999) {
+                   sId = getGlobalSpecId(cId, specId, elasticSearchDocument.getEducationType());
+               } else {
+                   sId = getGlobalSpecId(courseId, specId, elasticSearchDocument.getEducationType());
+               }
+                elasticSearchDocument.setSpecId(sId);
                 elasticSearchDocument.setSpecificationLabel(
-                        getSpecLabel(String.valueOf(elasticSearchDocument.getSpecId()), elasticSearchDocument.getEducationType()));
+                        getSpecLabel(String.valueOf(cId), String.valueOf(elasticSearchDocument.getSpecId()), elasticSearchDocument.getEducationType()));
             }
             if (mapList.get(0).get("COURSE_TYPE") != null) {
                 elasticSearchDocument.setCourseType((String) mapList.get(0).get("COURSE_TYPE"));
@@ -262,6 +274,82 @@ public class IndexingService {
         }
     }
 
+    private int getGlobalSpecId(Integer courseId, int sPECID, Integer educationType){
+        if (courseId<=9999 && sPECID <= 9999) {
+            return sPECID;
+        }
+        String str = "";
+        switch (educationType) {
+            case 1:
+                str="ug";
+                break;
+            case 2:
+                str="pg";
+                break;
+            case 3:
+                str="ppg";
+                break;
+        }
+        return getSpecIdFromLongtail(courseId, sPECID, str+"spec_longtail");
+    }
+
+    private int getSpecIdFromLongtail(int courseId, int specId, String tableName){
+        int sId = 9999;
+        try {
+            String query = "select global_id from "+tableName +" where course_id=:course_id and variant_id=:variant_id";
+            MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
+            mapSqlParameterSource.addValue("variant_id", specId);
+            mapSqlParameterSource.addValue("course_id", courseId);
+
+            List<Map<String, Object>> mapList = mySQLDatabaseClient.query("entity", query, mapSqlParameterSource);
+            if (!mapList.isEmpty()) {
+                String tempId = (String) mapList.get(0).get("global_id");
+                if(tempId!=null){
+                    sId = Integer.parseInt(tempId);
+                }
+            }
+        } catch (Exception e){
+            log.error("error in getting course variant name "+e);
+        }
+        return sId;
+    }
+    private int getGlobalCourseId(int globalCOURSEID, Integer educationType){
+        if (globalCOURSEID <= 9999) {
+            return globalCOURSEID;
+        }
+        String str = "";
+        switch (educationType) {
+            case 1:
+                str="ug";
+                break;
+            case 2:
+                str="pg";
+                break;
+            case 3:
+                str="ppg";
+                break;
+        }
+        return getCourseIdFromLongtail(globalCOURSEID, str+"course_longtail");
+    }
+
+    private int getCourseIdFromLongtail(int id, String tableName) {
+        int courseId = 9999;
+        try {
+            String query = "select global_id from "+tableName +" where variant_id=:variant_id";
+            MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
+            mapSqlParameterSource.addValue("variant_id", id);
+            List<Map<String, Object>> mapList = mySQLDatabaseClient.query("entity", query, mapSqlParameterSource);
+            if (!mapList.isEmpty()) {
+                String tempId = (String) mapList.get(0).get("global_id");
+                if(tempId!=null){
+                    courseId = Integer.parseInt(tempId);
+                }
+            }
+        } catch (Exception e){
+            log.error("error in getting course id from longtail "+e);
+        }
+        return courseId;
+    }
     private String getInstituteLabel(String instituteId) {
         String label = null;
         if (MASTER_ID_PATTERN.matcher(instituteId).find()) {
@@ -302,28 +390,28 @@ public class IndexingService {
         return label;
     }
 
-    private String getSpecLabel(String courseId, Integer educationType) {
+    private String getSpecLabel(String courseId, String specId, Integer educationType) {
         if (educationType == null) {
             return null;
         }
         String label = null;
         switch (educationType) {
             case 1:
-                label = cache.getMasterUGSpecLabel(Long.valueOf(courseId));
+                label = cache.getMasterUGSpecLabel(courseId, specId);
                 if (label == null) {
-                    return cache.getUGSpecLongTailLabel(courseId);
+                    return cache.getUGSpecLongTailLabel(courseId,specId);
                 }
                 break;
             case 2:
-                label = cache.getMasterPGSpecLabel(Long.valueOf(courseId));
+                label = cache.getMasterPGSpecLabel(courseId, specId);
                 if (label == null) {
-                    return cache.getPGSpecLongTailLabel(courseId);
+                    return cache.getPGSpecLongTailLabel(courseId,specId);
                 }
                 break;
             case 3:
-                label = cache.getMasterPPGSpecLabel(Long.valueOf(courseId));
+                label = cache.getMasterPPGSpecLabel(courseId, specId);
                 if (label == null) {
-                    return cache.getPPGSpecLongTailLabel(courseId);
+                    return cache.getPPGSpecLongTailLabel(courseId,specId);
                 }
                 break;
         }

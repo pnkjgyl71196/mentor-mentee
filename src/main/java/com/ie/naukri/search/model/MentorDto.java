@@ -112,6 +112,9 @@ public class MentorDto implements SearchResponseDTO {
 
     @JsonProperty(value = "IS_PREMIUM")
     private boolean isPremium;
+
+    @JsonProperty(value = "SKILLS")
+    private String skills;
     @JsonProperty(value = "id")
     private String id;
 

@@ -26,6 +26,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Primary
@@ -80,6 +81,17 @@ public class MentorSearchService implements SearchService {
                     ElasticSearchDocument sourceAsMap = (ElasticSearchDocument) searchHit.source();
 //                    Integer id = Integer.parseInt(searchHit.id());
                     MentorDto result = new ObjectMapper().convertValue(sourceAsMap, MentorDto.class);
+                    Set<String> uniqueSkill = new HashSet<>();
+                    if (!StringUtils.isEmpty(result.getPrjSkills())) {
+                        uniqueSkill.addAll(Arrays.stream(result.getPrjSkills().split(",")).collect(Collectors.toSet()));
+                    }
+                    if (!StringUtils.isEmpty(result.getProfileKeywords())) {
+                        uniqueSkill.addAll(Arrays.stream(result.getProfileKeywords().split(",")).collect(Collectors.toSet()));
+                    }
+                    if (!StringUtils.isEmpty(result.getExpKeywords())) {
+                        uniqueSkill.addAll(Arrays.stream(result.getExpKeywords().split(",")).collect(Collectors.toSet()));
+                    }
+                    result.setSkills(String.join(", ", uniqueSkill));
                     results.add(result);
                 }
             }

@@ -43,7 +43,7 @@ private Cache cache;
     public SearchResponseDTO getMentors(@RequestParam("userId") String resId,
                                                       @RequestParam("skill") String skillId) {
 
-        String query = "SELECT RESID, USERNAME,NAME,ABSOLUTE_CTC,TOTAL_EXP from cv_profile where RESID="+resId;
+        String query = "SELECT RESID,USERNAME,NAME,ABSOLUTE_CTC,TOTAL_EXP from cv_profile where RESID="+resId;
         MentorSearchRequestDto dto = new MentorSearchRequestDto();
         List<Map<String, Object>> resultMap = mySQLDatabaseClient.query("demo", query);
         if (resultMap.size() > 0) {
@@ -52,13 +52,16 @@ private Cache cache;
                 dto.setCtc((Integer) data.get("ABSOLUTE_CTC"));
             }
             if (data.containsKey("TOTAL_EXP")) {
+                if (((String)data.get("TOTAL_EXP")).contains("99")) {
+
+                }
                 if (!"99.-1".equals((String)data.get("TOTAL_EXP"))) {
                     dto.setTotalExp((String) data.get("TOTAL_EXP"));
                 }
             }
-            dto.setSkillId(skillId);
-            dto.setSkill(cache.getMasterSkillLabel(Long.valueOf(skillId)));
         }
+        dto.setSkillId(skillId);
+        dto.setSkill(cache.getMasterSkillLabel(Long.valueOf(skillId)));
         return searchMentors(dto);
     }
 
