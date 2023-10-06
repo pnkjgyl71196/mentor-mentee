@@ -140,6 +140,7 @@ public class IndexingService {
                         elasticSearchDocument.setCityIds(getMasterCityIds(cityIds));
                         elasticSearchDocument.setCityLabels(getMasterCityLabel(elasticSearchDocument.getCityIds()));
                     }
+                    updateEducationDetails(elasticSearchDocument);
                 } catch (Exception e) {
                     log.error("Error while processing doc: [{}]{}", map, elasticSearchDocument, e);
                 }
@@ -224,7 +225,8 @@ public class IndexingService {
         return builder.toString();
     }
 
-    public void getEducationDetails(String resId, ElasticSearchDocument elasticSearchDocument) {
+    public void updateEducationDetails(ElasticSearchDocument elasticSearchDocument) {
+        Integer resId = elasticSearchDocument.getResId();
         String query = "select COURSE_ID,EDUCATION_TYPE,SPEC_ID,COURSE_TYPE,ENTITY_INSTITUTE_ID,IS_PREMIUM from cv_education where RESID=:RESID and IS_PRIMARY = 1 order by EDUCATION_TYPE desc limit 1 ";
         MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         mapSqlParameterSource.addValue("RESID", resId);
