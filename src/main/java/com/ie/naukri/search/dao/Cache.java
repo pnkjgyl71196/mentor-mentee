@@ -255,9 +255,9 @@ public class Cache {
         List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select variant_id,global_id from city_longtail where global_id is not null");
         for (Map<String, Object> map : result) {
             if (map.get("variant_id") != null && map.get("global_id") != null) {
-                String variantId = ((String) map.get("variant_id")).trim();
-                if (!variantId.isEmpty()) {
-                    longTailToMasterCityMap.put((String) map.get("variant_id"), Long.valueOf((Integer) map.get("global_id")));
+                Integer variantId = ((Integer) map.get("variant_id"));
+                if (variantId != null) {
+                    longTailToMasterCityMap.put(String.valueOf(variantId), Long.valueOf((Integer) map.get("global_id")));
                 }
             }
         }

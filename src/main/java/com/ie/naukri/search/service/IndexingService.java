@@ -15,10 +15,7 @@ import org.springframework.util.StringUtils;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -136,8 +133,8 @@ public class IndexingService {
                         elasticSearchDocument.setPrjTitle((String) map.get("PRJ_TITLE"));
                     }
                     if (map.get("CITY") != null) {
-                        List<String> cityIds = Arrays.stream(((String) map.get("CITY")).split(",")).collect(Collectors.toList());
-                        elasticSearchDocument.setCityIds(getMasterCityIds(cityIds));
+                        Integer cityId = (Integer) map.get("CITY");
+                        elasticSearchDocument.setCityIds(getMasterCityIds(Collections.singletonList(cityId)));
                         elasticSearchDocument.setCityLabels(getMasterCityLabel(elasticSearchDocument.getCityIds()));
                     }
                     updateEducationDetails(elasticSearchDocument);
@@ -178,13 +175,13 @@ public class IndexingService {
         }
     }
 
-    private List<String> getMasterCityIds(List<String> cityIds) {
+    private List<String> getMasterCityIds(List<Integer> cityIds) {
         final List<String> masterIds = new ArrayList<>();
-        for (String id : cityIds) {
+        for (Integer id : cityIds) {
             if (cache.existInMasterCity(Long.valueOf(id))) {
-                masterIds.add(id);
+                masterIds.add(String.valueOf(id));
             } else {
-                Long mappedId = cache.getMappedCityMasterId(id.trim());
+                Long mappedId = cache.getMappedCityMasterId(String.valueOf(id));
                 if (mappedId != null) {
                     masterIds.add(String.valueOf(mappedId));
                 }
@@ -231,20 +228,20 @@ public class IndexingService {
         MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         mapSqlParameterSource.addValue("RESID", resId);
 
-        List<Map<String, Object>> mapList = mySQLDatabaseClient.query("entity", query, mapSqlParameterSource);
+        List<Map<String, Object>> mapList = mySQLDatabaseClient.query("demo", query, mapSqlParameterSource);
         if (!mapList.isEmpty()) {
             if (mapList.get(0).get("EDUCATION_TYPE") != null) {
-                elasticSearchDocument.setEducationType((String) mapList.get(0).get("EDUCATION_TYPE"));
+                elasticSearchDocument.setEducationType((Integer) mapList.get(0).get("EDUCATION_TYPE"));
             }
             if (mapList.get(0).get("COURSE_ID") != null) {
-                elasticSearchDocument.setCourseId((String) mapList.get(0).get("COURSE_ID"));
+                elasticSearchDocument.setCourseId((Integer) mapList.get(0).get("COURSE_ID"));
                 elasticSearchDocument.setCourseLabel(
                         getCourseLabel(elasticSearchDocument.getCourseId(), elasticSearchDocument.getEducationType()));
             }
             if (mapList.get(0).get("SPEC_ID") != null) {
-                elasticSearchDocument.setSpecId((String) mapList.get(0).get("SPEC_ID"));
+                elasticSearchDocument.setSpecId((Integer) mapList.get(0).get("SPEC_ID"));
                 elasticSearchDocument.setSpecificationLabel(
-                        getSpecLabel(elasticSearchDocument.getSpecId(), elasticSearchDocument.getEducationType()));
+                        getSpecLabel(String.valueOf(elasticSearchDocument.getSpecId()), elasticSearchDocument.getEducationType()));
             }
             if (mapList.get(0).get("COURSE_TYPE") != null) {
                 elasticSearchDocument.setCourseType((String) mapList.get(0).get("COURSE_TYPE"));
@@ -253,7 +250,7 @@ public class IndexingService {
                 elasticSearchDocument.setInstituteId((String) mapList.get(0).get("ENTITY_INSTITUTE_ID"));
                 elasticSearchDocument.setInstituteLabel(getInstituteLabel(elasticSearchDocument.getInstituteId()));
             }
-            if (mapList.get(0).get("IS_PREMIUM") != null && (Integer) mapList.get(0).get("IS_PREMIUM") == 1) {
+            if (mapList.get(0).get("IS_PREMIUM") != null && (Boolean) mapList.get(0).get("IS_PREMIUM")) {
                 elasticSearchDocument.setPremium(true);
             }
             elasticSearchDocument.setPremium(false);
@@ -261,7 +258,10 @@ public class IndexingService {
     }
 
     private String getInstituteLabel(String instituteId) {
-        String label = cache.getMasterInstituteLabel(Long.valueOf(instituteId));
+        String label = null;
+        if (MASTER_ID_PATTERN.matcher(instituteId).find()) {
+            label = cache.getMasterInstituteLabel(Long.valueOf(instituteId));
+        }
         if (label == null) {
             Long mappedId = cache.getMappedInstituteMasterId(instituteId);
             return mappedId != null ? cache.getMasterInstituteLabel(mappedId) : cache.getInstituteLabel(instituteId);
@@ -269,53 +269,53 @@ public class IndexingService {
         return label;
     }
 
-    private String getCourseLabel(String courseId, String educationType) {
-        if (!StringUtils.hasLength(educationType)) {
+    private String getCourseLabel(Integer courseId, Integer educationType) {
+        if (educationType==null) {
             return null;
         }
         String label = null;
         switch (educationType) {
-            case "1":
+            case 1:
                 label = cache.getMasterUGCourseLabel(Long.valueOf(courseId));
                 if (label == null) {
-                    return cache.getUGCourseLongTailLabel(courseId);
+                    return cache.getUGCourseLongTailLabel(String.valueOf(courseId));
                 }
                 break;
-            case "2":
+            case 2:
                 label = cache.getMasterPGCourseLabel(Long.valueOf(courseId));
                 if (label == null) {
-                    return cache.getPGCourseLongTailLabel(courseId);
+                    return cache.getPGCourseLongTailLabel(String.valueOf(courseId));
                 }
                 break;
-            case "3":
+            case 3:
                 label = cache.getMasterPPGCourseLabel(Long.valueOf(courseId));
                 if (label == null) {
-                    return cache.getPPGCourseLongTailLabel(courseId);
+                    return cache.getPPGCourseLongTailLabel(String.valueOf(courseId));
                 }
                 break;
         }
         return label;
     }
 
-    private String getSpecLabel(String courseId, String educationType) {
-        if (!StringUtils.hasLength(educationType)) {
+    private String getSpecLabel(String courseId, Integer educationType) {
+        if (educationType==null) {
             return null;
         }
         String label = null;
         switch (educationType) {
-            case "1":
+            case 1:
                 label = cache.getMasterUGSpecLabel(Long.valueOf(courseId));
                 if (label == null) {
                     return cache.getUGSpecLongTailLabel(courseId);
                 }
                 break;
-            case "2":
+            case 2:
                 label = cache.getMasterPGSpecLabel(Long.valueOf(courseId));
                 if (label == null) {
                     return cache.getPGSpecLongTailLabel(courseId);
                 }
                 break;
-            case "3":
+            case 3:
                 label = cache.getMasterPPGSpecLabel(Long.valueOf(courseId));
                 if (label == null) {
                     return cache.getPPGSpecLongTailLabel(courseId);

@@ -92,16 +92,16 @@ public class ElasticSearchDocument extends IndexingDocument {
     private String cityLabels;
 
     @JsonProperty(value = "COURSE_ID")
-    private String courseId;
+    private Integer courseId;
 
     @JsonProperty(value = "COURSE_LABEL")
     private String courseLabel;
 
     @JsonProperty(value = "EDUCATION_TYPE")
-    private String educationType;
+    private Integer educationType;
 
     @JsonProperty(value = "SPEC_ID")
-    private String specId;
+    private Integer specId;
 
     @JsonProperty(value = "SPEC_LABEL")
     private String specificationLabel;
