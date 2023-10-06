@@ -38,7 +38,7 @@ public class IndexingService {
 
     public void indexData() throws IOException, InterruptedException {
 
-        for (int i = 0; ; i++) {
+        for (int i = 0;i<500; i++) {
             String query = "select NAME,TOTAL_EXP,ABSOLUTE_CTC,ACTIVE,MOD_DT," +
                     "t2.TITLE as PROFILE_TITLE,t2.KEYWORDS as PROFILE_KEYWORDS,EXPID, " +
                     "t1.RESID, ORGN, t1.DESIG as EXP_DESIG, t1.PROFILE as EXP_PROFILE, t1.KEYWORDS as EXP_KEYWORDS, " +
@@ -47,7 +47,7 @@ public class IndexingService {
                     "SKILLS as PRJ_SKILLS,SKILLS_ID as PRJ_SKILLS_ID " +
                     "from cv_exp t1 inner join cv_profile t2 on t1.RESID = t2.RESID " +
                     "left join cv_itprojects t3 on t1.RESID = t3.RESID " +
-                    "where t2.ACTIVE = 'y' AND ( LENGTH(t1.KEYWORDS) > 0 or t3.RESID is not NULL ) " +
+                    "where t2.ACTIVE = 'y' AND ( LENGTH(t1.KEYWORDS) > 0 or t3.RESID is not NULL ) AND MOD_DT is not null " +
                     "AND TOTAL_EXP > 1 AND EXP_TYPE ='F'";
             query = query + " limit " + i * 100 + ",100";
             List<Map<String, Object>> result = mySQLDatabaseClient.query("demo", query);

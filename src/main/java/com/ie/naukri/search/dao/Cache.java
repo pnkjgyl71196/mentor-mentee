@@ -25,6 +25,10 @@ public class Cache {
     @Inject
     ObjectMapper objectMapper;
 
+    @Autowired
+    private MySQLDatabaseClient mySQLDatabaseClient;
+
+
     @Value("${entityMasterSkillDesignationUrl}")
     private String entityMasterSkillDesignationUrl;
 
@@ -44,6 +48,7 @@ public class Cache {
     public void init() throws Exception {
         prepareMasterSkillsMap();
         prepareMasterDesignationMap();
+        populateSkillLongtail();
     }
 
     public void prepareMasterSkillsMap() throws Exception {
@@ -82,32 +87,45 @@ public class Cache {
         return masterDesignationsMap.get(id);
     }
 
+    private void populateSkillLongtail() {
+        List<Map<String, Object>> result = mySQLDatabaseClient.query("entity", "select variant_id,global_id from skill_longtail where global_id is not null");
+        for (Map<String, Object> map : result) {
+            if (map.get("variant_id") != null && map.get("global_id") != null) {
+                String variantId = ((String) map.get("variant_id")).trim();
+                if (variantId.length() != 0) {
+                    longTailToMasterSkillsMap.put((String) map.get("variant_id"), Long.valueOf((Integer)map.get("global_id")));
+                }
+
+            }
+        }
+    }
 
     public Long getMappedSkillMasterId(String id) {
         String trimmedId = id.trim();
         if (longTailToMasterSkillsMap.containsKey(trimmedId)) {
             return longTailToMasterSkillsMap.get(trimmedId);
         }
-        try {
-            String response = restClient.execute(
-                    entityLongTailSkillDesignationUrl + "/skill/" + trimmedId, HttpMethod.GET, null,
-                    String.class);
-            if (!response.isEmpty()) {
-                JSONObject jsonObject = new JSONObject(response);
-                if (jsonObject.has("skillLongtail") && !jsonObject.isNull("skillLongtail")) {
-                    JSONObject skillLongTail = jsonObject.getJSONObject("skillLongtail");
-                    longTailToMasterSkillsMap.put(trimmedId, null);
-                    if (skillLongTail.has("status") && !skillLongTail.isNull("status")
-                            && "MERGED".equals(skillLongTail.getString("status")) && !skillLongTail.isNull("labelTypeGlobalId")) {
-                        Long mappedId = skillLongTail.getLong("labelTypeGlobalId");
-                        longTailToMasterSkillsMap.put(trimmedId, mappedId);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error("exception in getting masterId for longTail Skill Id [{}]: ", trimmedId, e);
-        }
-        return longTailToMasterSkillsMap.get(trimmedId);
+        return null;
+//        try {
+//            String response = restClient.execute(
+//                    entityLongTailSkillDesignationUrl + "/skill/" + trimmedId, HttpMethod.GET, null,
+//                    String.class);
+//            if (!response.isEmpty()) {
+//                JSONObject jsonObject = new JSONObject(response);
+//                if (jsonObject.has("skillLongtail") && !jsonObject.isNull("skillLongtail")) {
+//                    JSONObject skillLongTail = jsonObject.getJSONObject("skillLongtail");
+//                    longTailToMasterSkillsMap.put(trimmedId, null);
+//                    if (skillLongTail.has("status") && !skillLongTail.isNull("status")
+//                            && "MERGED".equals(skillLongTail.getString("status")) && !skillLongTail.isNull("labelTypeGlobalId")) {
+//                        Long mappedId = skillLongTail.getLong("labelTypeGlobalId");
+//                        longTailToMasterSkillsMap.put(trimmedId, mappedId);
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            log.error("exception in getting masterId for longTail Skill Id [{}]: ", trimmedId, e);
+//        }
+//        return longTailToMasterSkillsMap.get(trimmedId);
     }
 
     public Long getMappedDesignationMasterId(String id) {

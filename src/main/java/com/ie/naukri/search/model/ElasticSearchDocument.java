@@ -1,7 +1,6 @@
 package com.ie.naukri.search.model;
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ie.naukri.search.commons.core.models.IndexingDocument;
@@ -9,18 +8,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ToString
 public class ElasticSearchDocument extends IndexingDocument {
-
-    //t1.KEYWORDS_ID as EXP_KEYWORDS_ID, DESIG_ID, EXP_TYPE, DETAILS as PRJ_DETAILS,t3.ROLE as PRJ_ROLE,t3.TITLE as PRJ_TITLE,SKILLS as PRJ_SKILLS,SKILLS_ID as PRJ_SKILLS_ID
-
     @JsonProperty(value = "NAME")
     private String name;
 
