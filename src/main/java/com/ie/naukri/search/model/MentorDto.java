@@ -77,10 +77,41 @@ public class MentorDto implements SearchResponseDTO {
     @JsonProperty(value = "PRJ_SKILLS_ID")
     private List<String> prjSkillsId;
 
-
     @JsonProperty(value = "RESID")
     private Integer resId;
 
+    @JsonProperty(value = "CITY_ID")
+    private List<String> cityIds;
+
+    @JsonProperty(value = "CITY")
+    private String cityLabels;
+
+    @JsonProperty(value = "COURSE_ID")
+    private Integer courseId;
+
+    @JsonProperty(value = "COURSE_LABEL")
+    private String courseLabel;
+
+    @JsonProperty(value = "EDUCATION_TYPE")
+    private Integer educationType;
+
+    @JsonProperty(value = "SPEC_ID")
+    private Integer specId;
+
+    @JsonProperty(value = "SPEC_LABEL")
+    private String specificationLabel;
+
+    @JsonProperty(value = "COURSE_TYPE")
+    private String courseType;
+
+    @JsonProperty(value = "ENTITY_INSTITUTE_ID")
+    private String instituteId;
+
+    @JsonProperty(value = "ENTITY_INSTITUTE_LABEL")
+    private String instituteLabel;
+
+    @JsonProperty(value = "IS_PREMIUM")
+    private boolean isPremium;
     @JsonProperty(value = "id")
     private String id;
 

@@ -63,7 +63,7 @@ public class MentorSearchService implements SearchService {
         }
 
         SourceConfig.Builder sourceBuilder = new SourceConfig.Builder();
-        sourceBuilder.filter(new SourceFilter.Builder().includes(Arrays.asList("NAME","ACTIVE","TOTAL_EXP", "ABSOLUTE_CTC", "PROFILE_TITLE", "PROFILE_KEYWORDS", "ORGN", "EXP_DESIG", "EXP_TYPE", "EXP_PROFILE", "PRJ_DETAILS", "PRJ_ROLE", "PRJ_SKILLS", "PRJ_TITLE", "RESID", "EXP_KEYWORDS")).build());
+        sourceBuilder.filter(new SourceFilter.Builder().includes(Arrays.asList("NAME","ACTIVE","TOTAL_EXP","ABSOLUTE_CTC", "PROFILE_TITLE", "PROFILE_KEYWORDS", "ORGN", "MOD_DT","PROFILE_KEYWORDS_ID","EXP_DESIG","EXP_TYPE","EXP_PROFILE", "PRJ_DETAILS", "PRJ_ROLE","PRJ_SKILLS", "PRJ_TITLE", "RESID","EXP_KEYWORDS","EXPID","ORGNID","EXP_KEYWORDS_ID","DESIG_ID","PRJ_SKILLS_ID","CITY_ID","CITY","COURSE_ID","COURSE_LABEL","EDUCATION_TYPE","SPEC_ID","SPEC_LABEL","COURSE_TYPE","ENTITY_INSTITUTE_ID","ENTITY_INSTITUTE_LABEL","IS_PREMIUM")).build());
         SearchRequest.Builder searchRequest = new SearchRequest.Builder().index("testindex").from(0).size(10).trackScores(true).query(boolQueryBuilder.build()._toQuery()).source(sourceBuilder.build());
         searchRequest.trackTotalHits((track) -> track.enabled(true));
         searchRequest.collapse(QueryBuilders.getCollapseQuery("RESID").build());
